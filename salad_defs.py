@@ -10,8 +10,8 @@ import numpy as np
 # feature_compress : whether to compress feature measures, such as centrality or color. If including no features, set to false
 # compressed : whether to compress ingredient/network vectors
 
-def get_pairs_cosine_threshold(matrix = [], network_community = [], network_pairs = False, num_ingredients = 334,
-                               ingredient_end =337, feature_compressed = False, compressed = True ):
+def get_pairs_cosine_threshold(matrix = [], network_community = [], network_pairs = False, num_ingredients = 319,
+                               ingredient_end =322, feature_compressed = False, compressed = True ):
     
     cos_sim_pairs_over = []
     y_vector_over = []
@@ -101,7 +101,7 @@ def compress(recipe1, recipe2, num_ingred, network_pairs):
 #This excludes the features rating, numreviews, prep time
 #For use in salad_chef.py, specifically, to build recipe pairs to give to ensemble for testing
 # pairs have i,j attached to front to track which pairs are which
-def build_recipe_pairs(matrix = [], num_ingredients = 334, feature_compressed = False,
+def build_recipe_pairs(matrix = [], num_ingredients = 319, feature_compressed = False,
                         compressed = True ):
 
     pairs =[]

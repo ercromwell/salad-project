@@ -29,9 +29,9 @@ load_ensemble = pickle.load(load)
 load.close()
 gtbs = load_ensemble[0][0]
 
-num_recipes = 500#Number of initial random recipes to generate
+num_recipes = 100 #Number of initial random recipes to generate
 
-num_generations = 500 #Number of generations to produce
+num_generations = 40 #Number of generations to produce
 
 num_reproduce = num_recipes/2 #Number of times children are produced, (number of children = 2*num_reproduce)
 
@@ -57,12 +57,20 @@ init_gen_max = []
 same = []
 current_gen_max = []
 
-#Create copy of initial recipe generation, use later for comparision, measuremnet
+#Create copy of initial recipe generation, use later for comparision, measurement
 recipes = init_recipes
 feature_recipes = feature_init_recipes
 final_recipes = []
 final_feature_recipes=[]
 
+s = gad.compare_recipe_generation( feature_init_recipes, feature_recipes, num_ingred, gtbs)
+x.append(0)
+scores.append(s[0])
+init_gen_max.append(s[1])
+same.append(gad.same_recipes(init_recipes))
+current_gen_max.append(0)
+
+#Loop for generations
 for i in range(0, num_generations):
     print i
 
@@ -103,12 +111,31 @@ for i in range(0, num_generations):
     #6 take top parents and children, label next generation
     feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
                                                      rank_k, start_ingred, end_ingred, cmv)
-    recipes, feature_recipes = gad.build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs)
+    #recipes, feature_recipes = gad.build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs)
+
+    #This method/code compare children recipes against each other, not parents
+    children_pairs =  salad_defs.build_recipe_pairs(matrix = feature_children_recipes)
+    children_score = gad.rank_recipes(children_pairs, gtbs)
+        
+        #retrieve top children
+    top_50_children = gad.top_n_recipes(children_score, 50)
+    tc = []
+    for score, recipe in top_50_children:
+        tc.append(children_recipes[recipe])
+
+        #retrieve top parents
+    top_50_parents = gad.top_n_recipes(recipe_score, 50)
+    tp = []
+    for score, recipe in top_50_parents:
+        tp.append(recipes[recipe])
+
+    recipes = tp + tc
     
+    feature_recipes = gad.build_feature_recipes(recipes, compliment_graph,rank_k, start_ingred, end_ingred, cmv)  
 
     #8 Compare next_gen to first generation
-    s = gad.compare_recipe_generation(feature_init_recipes, feature_recipes, num_ingred, gtbs)
-    x.append(i)
+    s = gad.compare_recipe_generation(feature_init_recipes, feature_children_recipes, num_ingred, gtbs)
+    x.append(i+1)
     scores.append(s[0])
     init_gen_max.append(s[1])
     same.append(gad.same_recipes(recipes))

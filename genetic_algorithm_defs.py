@@ -1,3 +1,13 @@
+# List of methods:
+#def generate_random_recipes : Create initial recipe population. Can be completely random or based on random walk
+#def random_graph_walk : Random walk on compliment graph to create intitial recipe population
+#def rank_recipes : 
+
+
+
+
+
+
 import random
 import networkx
 from collections import defaultdict
@@ -133,6 +143,7 @@ def find_interval(random_num, prob_interval):
                 location += 1
 
     return interval
+#### Methods for bulding children recipes
 
 # Create children recipes given two recipes, by splitting somewhere randomly
 def create_children(recipe_1, recipe_2, num_ingred):
@@ -179,7 +190,7 @@ def bottom_n_recipes(recipe_score, n):
 # Random(for now) mutations to children recipes
 def mutations(children_recipes):
 
-    mutation_chance = 0.05
+    mutation_chance = 0.10
     prob_add = 0.3333
     prob_remove = 0.6666
     prob_sub = 1
@@ -259,7 +270,7 @@ def compare_recipe_generation( feature_init_recipes, feature_current_recipes, nu
             pair = salad_defs.make_recipe_pair(current, init, num_ingred,
                                                network_pairs, compressed, feature_compressed)
             score = gtbs.predict(pair)
-            score_current+=score
+            score_current += score
             c += score
 
         #score_current += c
@@ -301,7 +312,7 @@ def best_score(feature_recipes, gtbs):
     for score, r in best:
         t = score
 
-    return t
+    return float(t)/len(feature_recipes)
 
 #Return next generation of recipes
 def build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs):
