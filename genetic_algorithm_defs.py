@@ -3,11 +3,6 @@
 #def random_graph_walk : Random walk on compliment graph to create intitial recipe population
 #def rank_recipes : 
 
-
-
-
-
-
 import random
 import networkx
 from collections import defaultdict
@@ -147,7 +142,29 @@ def find_interval(random_num, prob_interval):
 
 # Create children recipes given two recipes, by splitting somewhere randomly
 def create_children(recipe_1, recipe_2, num_ingred):
-    split = random.randint(1 ,num_ingred-1) #forced crossover
+    #find first, last location for ingredient
+    def first_last(recipe):
+        first = recipe.index(1)
+        last = 0
+        for i in range(0,len(recipe)):
+            if recipe[i] == 1:
+                last = i
+        return first, last
+
+
+    first_1, last_1 = first_last(recipe_1)
+    first_2, last_2 = first_last(recipe_2)
+    
+    f=first_1
+    l=last_1
+
+    if f > first_2:
+        f = first_2
+
+    if l < last_2:
+        l = last_2
+
+    split = random.randint(f+1 ,l-1) #forced crossover
 
     child_1 = recipe_1[:split] + recipe_2[split:]
     child_2 = recipe_2[:split] + recipe_1[split:]
@@ -192,7 +209,7 @@ def mutations(children_recipes):
 
     mutation_chance = 0.10
     prob_add = 0.3333
-    prob_remove = 0.6666
+    prob_remove = 0.66667
     prob_sub = 1
     
     for child in children_recipes:
@@ -316,7 +333,6 @@ def best_score(feature_recipes, gtbs):
 
 #Return next generation of recipes
 def build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs):
-
       
     #7: create next generation
     all_feature_recipes = feature_children_recipes + feature_recipes
