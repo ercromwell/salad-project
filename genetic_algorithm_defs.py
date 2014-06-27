@@ -8,7 +8,9 @@ import networkx
 from collections import defaultdict
 import ingredient_networks as inet
 import centrality_measures as cm
+import numpy as np
 import salad_defs
+import math
 
 # Generates random recipes for fitness function to evaluate
 # Need to establish what the length of the recipes generated should be, look into average length of recipe
@@ -98,8 +100,10 @@ def rank_recipes(recipe_pairs, gtbs):
 
         if p == 1:
             recipe_score[first] += 1
+            recipe_score[second] += 0
         else:
             recipe_score[second] += 1
+            recipe_score[first] += 0
 
     return recipe_score
 
@@ -108,7 +112,17 @@ def create_parent_probabilty_interval(recipe_score):
     
     total = sum(recipe_score.values())
     parent_prob = [0.0]
+
+    #testing
+    pr = 0
+
+    
     for recipe, score in sorted(recipe_score.items()):
+        if recipe == pr:
+            pr+=1
+        else:
+            print "Out of bounds on " + str(recipe)
+        
         parent_prob.append( float(score)/total  + parent_prob[recipe] )
 
     return parent_prob
@@ -185,7 +199,7 @@ def build_feature_recipes(recipes, compliment_graph, rank_k, start_ingred, end_i
 # returns top n ranked recipes
 def top_n_recipes(recipe_score, n):
 
-    pairs = [ (v,k) for (k,v) in recipe_score.iteritems() ]
+    pairs = [ (score, recipe) for (recipe, score) in recipe_score.iteritems() ]
     
     s = sorted(pairs, reverse = True)
 
@@ -196,7 +210,7 @@ def top_n_recipes(recipe_score, n):
     
 # Returns bottom n ranked recipes
 def bottom_n_recipes(recipe_score, n):
-    pairs = [ (v,k) for (k,v) in recipe_score.iteritems() ]
+    pairs = [ (score,recipe) for (recipe, score) in recipe_score.iteritems() ]
 
     s = sorted(pairs)
 
@@ -331,7 +345,7 @@ def best_score(feature_recipes, gtbs):
 
     return float(t)/len(feature_recipes)
 
-#Return next generation of recipes
+#Return next generation of recipes, choosing top recipes from parents and children 
 def build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs):
       
     #7: create next generation
@@ -346,7 +360,88 @@ def build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, g
         tr.append(all_feature_recipes[recipe][:len(recipes[0])])
         fr.append(all_feature_recipes[recipe])
     
-    return tr, fr
+    return tr,
+#Choose top n unique recipes from a set of recipes, returns the recipe vector
+def top_unique_n_recipes(recipe_score, recipes, num_recipes):
+
+    pairs = [ (score, recipe) for (recipe, score) in recipe_score.iteritems() ]
+    
+    s = sorted(pairs, reverse = True)
+
+    top_unique = []
+    recipe_set = set()
+    
+    i = 0 #iterator
+    while len(top_unique) < num_recipes:
+        r = s[i][1] #recipe id
+        t = tuple(recipes[r])
+        if t not in recipe_set: #test to see if its items in list, and not the list pointer
+            top_unique.append(recipes[r])
+            recipe_set.add(t)
+
+        i+=1
+
+    return top_unique
+
+#Diversity measurement, based on equation from paper "Measurement of Population Diversity"
+#, by Ronald W. Morrison and Kenneth A. De Jong
+def diversity_measure(recipes):
+    population_size = len(recipes)
+
+    #Find centroid
+    m = np.array(recipes)
+    centroid = np.sum(m, axis = 0) / float(population_size) 
+    
+    #Calculate measure
+    dm = 0
+    for recipe in m:
+        for coord in range(0, len(recipe)):
+            c = recipe[coord] - centroid[coord]
+            dm += pow(c,2) 
+
+    return dm
+
+#From paper "Maintaining Diversity in Genetic Search" by Michael L. Mauldin
+# Has to have distance from ALL recipes
+def unique_recipes(recipes, k, current_gen, total_gen):
+
+    unique = []
+    
+    bit_decrease = linear_bit_decrease(k, total_gen, current_gen)
+    not_satisfy = set()
+    for i in range(0, len(recipes)):
+        if i not in not_satisfy:
+            if satisfy_uniqueness(i, i+1, recipes, bit_decrease, not_satisfy):
+                unique.append(recipes[i])
+
+    return unique
+
+#Recursive function. Returns true if recipe satisfies hamming distance condition for all recipes
+def satisfy_uniqueness(i, j, recipes, bit_decrease, not_satisfy):
+
+    if j >= len(recipes):
+        return True
+
+    if hamming_distance(recipes[i], recipes[j]) > bit_decrease:
+        return satisfy_uniqueness(i, j+1, recipes , bit_decrease, not_satisfy)
+    else:
+        not_satisfy.add(j)
+        return False
+    
+
+# k = initial bit_length
+# n = total number of generations/trial
+# t = current gen/ trial
+def linear_bit_decrease(k, n, t):
+    return   math.ceil( k*(n - t)/ float(n) )
+    
+#From wikipedia page on Hamming distance
+def hamming_distance(s1, s2):
+    #Return the Hamming distance between equal-length sequences
+    if len(s1) != len(s2):
+        raise ValueError("Undefined for sequences of unequal length")
+    
+    return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
 
 
       

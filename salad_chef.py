@@ -31,9 +31,9 @@ gtbs = load_ensemble[0][0]
 
 num_recipes = 100 #Number of initial random recipes to generate
 
-num_generations = 100 #Number of generations to produce
+num_generations = 40 #Number of generations to produce
 
-num_reproduce = num_recipes/2 #Number of times children are produced, (number of children = 2*num_reproduce)
+num_reproduce = 200 #Number of times children are produced, (number of children = 2*num_reproduce)
 
 rank_k = 60 #Whatever rank used in learner
 list_of_ingredients = sorted(compliment_graph.nodes())
@@ -54,7 +54,7 @@ feature_init_recipes = gad.build_feature_recipes(init_recipes, compliment_graph,
 x = []
 scores = []
 init_gen_max = []
-same = []
+diverse = []
 current_gen_max = []
 
 #Create copy of initial recipe generation, use later for comparision, measurement
@@ -67,8 +67,8 @@ s = gad.compare_recipe_generation( feature_init_recipes, feature_recipes, num_in
 x.append(0)
 scores.append(s[0])
 init_gen_max.append(s[1])
-same.append(gad.same_recipes(init_recipes))
 current_gen_max.append(gad.best_score(feature_init_recipes, gtbs))
+diverse.append(gad.diversity_measure(init_recipes))
 
 #Loop for generations
 for i in range(0, num_generations):
@@ -108,18 +108,40 @@ for i in range(0, num_generations):
     #5: Slight mutation to children recipes
     gad.mutations(children_recipes)
 
-    #6 take top parents and children, label next generation
-    feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
+    #6 Create next generation
+
+    
+    
+        #This method only takes top 100 children to use as next generation
+
+    k= 8
+    unique_children = gad.unique_recipes(children_recipes, k, i , num_generations)
+    print len(unique_children)
+    
+    feature_children_recipes = gad.build_feature_recipes(unique_children, compliment_graph,
                                                      rank_k, start_ingred, end_ingred, cmv)
-    recipes, feature_recipes = gad.build_next_gen_recipes(recipes, feature_recipes, feature_children_recipes, gtbs)
+    
+    children_pairs =  salad_defs.build_recipe_pairs(matrix = feature_children_recipes)
+    children_score = gad.rank_recipes(children_pairs, gtbs)
+    
+    top_100_children = gad.top_n_recipes(children_score, num_recipes)
+
+    tc = []
+    fc = []
+    for score, recipe in top_100_children:
+        tc.append(unique_children[recipe])
+        fc.append(feature_children_recipes[recipe])
+
+    recipes = tc
+    feature_recipes = fc
 
     #8 Compare next_gen to first generation
-    s = gad.compare_recipe_generation(feature_init_recipes, feature_children_recipes, num_ingred, gtbs)
+    s = gad.compare_recipe_generation(feature_init_recipes, feature_recipes, num_ingred, gtbs)
     x.append(i+1)
     scores.append(s[0])
     init_gen_max.append(s[1])
-    same.append(gad.same_recipes(recipes))
     current_gen_max.append( gad.best_score(feature_children_recipes, gtbs) )
+    diverse.append(gad.diversity_measure(recipes))
     
     #9: Save last generation
     if i == num_generations -1:
@@ -139,15 +161,20 @@ for r in top_5:
     gad.print_ingredients(recipes[r[1]],list_of_ingredients)
 
 
-
+plt.subplot(2,1,1)
 plt.plot(x,scores, label = 'Mean % competitions won')
 plt.plot(x, init_gen_max, label = 'Max score on initial')
-plt.plot(x, same, label = 'Same')
 plt.plot(x, current_gen_max, label = 'Max for current gen')
-
-plt.legend(loc='upper right')
+#plt.legend(loc='upper left')
 plt.xlabel('generation')
 plt.ylabel('percent')
 plt.axis([0 ,num_generations, 0, 1.5])
+
+
+
+plt.subplot(2,1,2)
+plt.plot(x, diverse, label = 'Diversity')
+
+
 
 plt.show()
