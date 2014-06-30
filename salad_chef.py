@@ -16,11 +16,20 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
+    # known recipes
+load = open('feature_vector_matrix_over_5_reviews_cleaned_v11.pi')
+known_matrix = pickle.load(load)
+load.close()
+
     #compliment graph
 file_name = 'compliment_graph_weighted_v11.pi'
 load = open(file_name)
 compliment_graph = pickle.load(load)
 load.close()
+    # known network communities
+filename = 'compliment_network_community_v11_rank_60.pi'
+load = open(filename)
+network_community = pickle.load(load)
 
     #gradient boosting learner
 file_name = 'gtbs_v11_600_estimators_3_depth_rank_60.pi'
@@ -29,11 +38,11 @@ load_ensemble = pickle.load(load)
 load.close()
 gtbs = load_ensemble[0][0]
 
-num_recipes = 100 #Number of initial random recipes to generate
+num_recipes = 30 #Number of initial random recipes to generate
 
-num_generations = 40 #Number of generations to produce
+num_generations =3  #Number of generations to produce
 
-num_reproduce = 200 #Number of times children are produced, (number of children = 2*num_reproduce)
+num_reproduce = 60 #Number of times children are produced, (number of children = 2*num_reproduce)
 
 rank_k = 60 #Whatever rank used in learner
 list_of_ingredients = sorted(compliment_graph.nodes())
@@ -41,49 +50,59 @@ num_ingred = len(list_of_ingredients) #Official, for now
 start_ingred = 0
 end_ingred = num_ingred
 
-#1: Generate random recipes
-    #initial recipes set up like ingredient vectors
-init_recipes = gad.generate_random_recipes(num_recipes, num_ingred, random_walk = True,compliment_graph = compliment_graph)
-    
-    #1a: Add centrality info, network community info to recipes
+    # Add centrality info, network community info to recipes
 cmv = cm.centrality_measure_vec(compliment_graph) #To be kept outside loop
 
-#For comparision use
-feature_init_recipes = gad.build_feature_recipes(init_recipes, compliment_graph, rank_k,
-                                                 start_ingred, end_ingred, cmv)
+feature_known_recipes = []
+known_ratings = []
+for i in range(0,len(known_matrix)):
+    if sum(known_matrix[i][3:]) > 0:
+        cv = cm.centrality_vector( known_matrix[i][3:], cmv)
+        feature_known_recipes.append(known_matrix[i][3:] + cv + network_community[i])
+        known_ratings.append(known_matrix[i][0])
+
+print len(known_ratings), len(feature_known_recipes)
+
+
+#1: Generate random recipes
+    #initial recipes set up like ingredient vectors
+recipes = gad.generate_random_recipes(num_recipes, num_ingred, random_walk = True,compliment_graph = compliment_graph)
+    
+
+    #1a: Create feature initial recipes
+feature_recipes = gad.build_feature_recipes(recipes, compliment_graph, rank_k,
+                                         start_ingred, end_ingred, cmv)
+
+#measurements to keep track of
 x = []
 scores = []
-init_gen_max = []
+score_max = []
 diverse = []
 current_gen_max = []
+median_score = []
 
 #Create copy of initial recipe generation, use later for comparision, measurement
-recipes = init_recipes
-feature_recipes = feature_init_recipes
-final_recipes = []
-final_feature_recipes=[]
 
-s = gad.compare_recipe_generation( feature_init_recipes, feature_recipes, num_ingred, gtbs)
+final_recipes = []
+feature_final_recipes=[]
+
+#2: Measurements for initial population, comparing to known recipes (those from alrecipes.com)
+recipe_rankings, s = gad.compare_recipe_generation( feature_known_recipes, feature_recipes,
+                                                         known_ratings, num_ingred, gtbs)
 x.append(0)
 scores.append(s[0])
-init_gen_max.append(s[1])
-current_gen_max.append(gad.best_score(feature_init_recipes, gtbs))
-diverse.append(gad.diversity_measure(init_recipes))
-
+score_max.append(s[1])
+current_gen_max.append(max(recipe_rankings)[0])
+diverse.append(gad.diversity_measure(recipes))
+median_score.append(s[2])
 #Loop for generations
 for i in range(0, num_generations):
     print i
 
-    #2: Create the recipe pairs, including any feature information such as centrality and network community
-    recipe_pairs = salad_defs.build_recipe_pairs(matrix = feature_recipes)
-
-    #3: Use predictor to find 'top' recipes.
-        #3a: recipe scoring
-    recipe_score = gad.rank_recipes(recipe_pairs, gtbs)
-
-        #3b: probability interval for choosing parent recipe
-    parent_probability = gad.create_parent_probabilty_interval(recipe_score)
+    #3: Create parent probabily interval.
+    recipe_score = [ score for (score, max, med, j) in recipe_rankings ] 
     
+    parent_probability = gad.create_parent_probabilty_interval(recipe_score)
 
     #4: Create children recipes using crossovers of parent recipes
     children_recipes = []
@@ -102,18 +121,15 @@ for i in range(0, num_generations):
             parent_2 = gad.find_interval(prob_2, parent_probability)
 
         child_1, child_2 = gad.create_children(recipes[parent_1], recipes[parent_2], num_ingred)
+
+        #5: Slight mutation to children recipes
+        #gad.mutations(child_1)
+        #gad.mutations(child_2)
         children_recipes.append(child_1)
         children_recipes.append(child_2)
-
-    #5: Slight mutation to children recipes
     gad.mutations(children_recipes)
-
-    #6 Create next generation
-
-    
-    
         #This method only takes top 100 children to use as next generation
-
+    #6: Diversity check on children recipes, eliminating recipes that do not satisfy requirement
     k= 8
     unique_children = gad.unique_recipes(children_recipes, k, i , num_generations)
     print len(unique_children)
@@ -121,27 +137,25 @@ for i in range(0, num_generations):
     feature_children_recipes = gad.build_feature_recipes(unique_children, compliment_graph,
                                                      rank_k, start_ingred, end_ingred, cmv)
     
-    children_pairs =  salad_defs.build_recipe_pairs(matrix = feature_children_recipes)
-    children_score = gad.rank_recipes(children_pairs, gtbs)
-    
-    top_100_children = gad.top_n_recipes(children_score, num_recipes)
+    #7: Compare children to known recipes
+    child_recipe_rankings, s =  gad.compare_recipe_generation( feature_known_recipes, feature_children_recipes,
+                                                         known_ratings, num_ingred, gtbs)
 
-    tc = []
-    fc = []
-    for score, recipe in top_100_children:
-        tc.append(unique_children[recipe])
-        fc.append(feature_children_recipes[recipe])
 
-    recipes = tc
-    feature_recipes = fc
+    #Select next generation of recipes
+    recipe_rankings = sorted(child_recipe_rankings, reverse = True)[:num_recipes]
+    recipes = [ children_recipes[j] for (score, max, med, j) in recipe_rankings]
+    feature_recipes = [ feature_children_recipes[j] for (score, max, med, j) in recipe_rankings]
 
-    #8 Compare next_gen to first generation
-    s = gad.compare_recipe_generation(feature_init_recipes, feature_recipes, num_ingred, gtbs)
+         #Add measurements
     x.append(i+1)
     scores.append(s[0])
-    init_gen_max.append(s[1])
-    current_gen_max.append( gad.best_score(feature_children_recipes, gtbs) )
+    score_max.append(s[1])
+    current_gen_max.append(recipe_rankings[0][0])
     diverse.append(gad.diversity_measure(recipes))
+    median_score.append(s[2])
+
+
     
     #9: Save last generation
     if i == num_generations -1:
@@ -152,20 +166,23 @@ for i in range(0, num_generations):
 
 #10: Display final recipes, results of improvement
 
-final_pairs = salad_defs.build_recipe_pairs(matrix = feature_final_recipes)
-
-final_score = gad.rank_recipes(final_pairs, gtbs)
-top_5 = gad.top_n_recipes(final_score, 5)
-for r in top_5:
-    print 'For recipe # %d, score is: %d'% (r[1], r[0])
-    gad.print_ingredients(recipes[r[1]],list_of_ingredients)
+top_5 = [  score for (score, max, med, i) in recipe_rankings][:5]
+top_r = recipes[:5]
+i=0
+for score in top_5:
+    print 'For recipe # %d, score is: %d'% (i, score)
+    gad.print_ingredients(top_r[i],list_of_ingredients)
+    i+=1
 
 
 plt.subplot(2,1,1)
 plt.plot(x,scores, label = 'Mean % competitions won')
-plt.plot(x, init_gen_max, label = 'Max score on initial')
+plt.plot(x, score_max, label = 'Max score on initial')
 plt.plot(x, current_gen_max, label = 'Max for current gen')
-#plt.legend(loc='upper left')
+plt.plot(x, median, label = 'Median % competitions won')
+plt.legend(loc='upper left')
+#plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+
 plt.xlabel('generation')
 plt.ylabel('percent')
 plt.axis([0 ,num_generations, 0, 1.5])
@@ -178,3 +195,4 @@ plt.plot(x, diverse, label = 'Diversity')
 
 
 plt.show()
+

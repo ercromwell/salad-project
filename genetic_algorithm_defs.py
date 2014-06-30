@@ -108,22 +108,18 @@ def rank_recipes(recipe_pairs, gtbs):
     return recipe_score
 
 # Create probability intervals to choose parents, based on scores
+# recipe_score is a list
 def create_parent_probabilty_interval(recipe_score):
     
-    total = sum(recipe_score.values())
+    total = sum(recipe_score)
     parent_prob = [0.0]
 
     #testing
     pr = 0
-
     
-    for recipe, score in sorted(recipe_score.items()):
-        if recipe == pr:
-            pr+=1
-        else:
-            print "Out of bounds on " + str(recipe)
+    for recipe in range(0, len(recipe_score)):
         
-        parent_prob.append( float(score)/total  + parent_prob[recipe] )
+        parent_prob.append( float(recipe_score[recipe])/total  + parent_prob[recipe] )
 
     return parent_prob
 
@@ -281,48 +277,57 @@ def substitute_ingredient(recipe):
     recipe[remove_ingred] = 0
     recipe[add_ingred] = 1
 
-# Used to compare current generation of recipes to initial starting population of recipes
-def compare_recipe_generation( feature_init_recipes, feature_current_recipes, num_ingred, gtbs):
-    score_current = 0
-    
+# Used to compare current generation of recipes to known recipes
+# feature_known_recipse contains full features, known_ratings has ratings, correspond to recipe in feature_known_recipes
+def compare_recipe_generation( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs):
+    score_current = 0 # Avereage % competitions won against known recipes
+    m = [] # keeping track of median % competitions won
     network_pairs = False
     compressed = True
     feature_compressed = False
 
-    init_gen_max = 0    #Score of current generation recipes against initial generation recipes
-    init_gen_loc = 0
+    score_max = 0    #Max % score against known recipes
+    recipe_rankings = [] # rankings for each current recipes
+
+    num_known_recipes = len(feature_known_recipes)
     i = 0
 
     #Average/ mean score of current generation
     for current in feature_current_recipes:
         c = 0
-        for init in feature_init_recipes:
+        ratings = []
+        for j in range(0,num_known_recipes):
 
-            pair = salad_defs.make_recipe_pair(current, init, num_ingred,
+            pair = salad_defs.make_recipe_pair(current, feature_known_recipes[j], num_ingred,
                                                network_pairs, compressed, feature_compressed)
             score = gtbs.predict(pair)
             score_current += score
             c += score
 
-        #score_current += c
-        if c > init_gen_max:
-            init_gen_max = c
-            init_gen_loc = i
+            if score == 1:
+                ratings.append(known_ratings[j])
+
+        # For each current recipe:
+        median_rating = np.median(ratings)
+        mean_rating = np.mean(ratings)
+        percent_score = float(c) / num_known_recipes
+        recipe_rankings.append( (percent_score, mean_rating, median_rating, i) ) #i is for recipe tracking
+        
+        m.append(float(c))
+        
+        if c > score_max:
+            score_max = c
+#            init_gen_loc = i
         i+=1
             
-    num_comp = len(feature_init_recipes) * len(feature_current_recipes)
-
+    num_comp = num_known_recipes * len(feature_current_recipes)
     percent_score = float(score_current)/num_comp
 
+    median_score = np.median(m) / num_known_recipes #median of percent competitions won
 
-    #Top scoring recipe in current generation (% competitions won), include its score in initial generation
+    p_score_max = float(score_max)/ num_known_recipes
     
-    
-
-    #Top % score current gen recipes in initial generaton, plus its % score in current gen
-    init_gen_max_p = float(init_gen_max)/ len(feature_init_recipes)
-    
-    return [percent_score, init_gen_max_p]
+    return recipe_rankings , (percent_score, p_score_max, median_score)
 
 
 def same_recipes(recipes):
@@ -399,7 +404,7 @@ def diversity_measure(recipes):
             c = recipe[coord] - centroid[coord]
             dm += pow(c,2) 
 
-    return dm
+    return dm/ float(len(recipes))
 
 #From paper "Maintaining Diversity in Genetic Search" by Michael L. Mauldin
 # Has to have distance from ALL recipes

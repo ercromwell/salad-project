@@ -19,15 +19,15 @@ script, isTree, num = argv
 isLoaded = False
 
 num_learners = int(num)
-load = open('feature_vector_matrix_over_5_reviews_cleaned_v5.pi')
+load = open('feature_vector_matrix_over_5_reviews_cleaned_v11.pi')
 matrix = pickle.load(load)
 load.close()
 
-num_ingred = 334
+num_ingred = len(matrix[0])-3
 start_ingred = 3
-end_ingred = 337
+end_ingred = num_ingred + start_ingred
 
-filename = 'compliment_graph_weighted.pi'
+filename = 'compliment_graph_weighted_v11.pi'
 load = open(filename)
 graph = pickle.load(load)
 load.close()
@@ -35,7 +35,7 @@ load.close()
 cmv = cm.centrality_measure_vec(graph)
 
 
-filename = 'compliment_network_community_rank_60.pi'
+filename = 'compliment_network_community_v11_rank_60.pi'
 load = open(filename)
 network_community = pickle.load(load)
 
@@ -49,7 +49,9 @@ print len(new_matrix[0])
 
 
 print "Constructing pairs..."
-recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold(matrix = new_matrix)
+recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold(matrix = new_matrix,
+                                                                                 num_ingredients = num_ingred,
+                                                                                 ingredient_end = end_ingred)
 
 print len(y_vector)
 print len(recipe_pairs[0])
@@ -135,7 +137,7 @@ salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
 
     
 #pickle it!
-name = 'gtbs_600_estimators_3_depth_rank_60.pi'
+name = 'gtbs_v11_600_estimators_3_depth_rank_60.pi'
 file_pi = open(name, 'w') 
 pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
     
