@@ -154,8 +154,11 @@ def find_interval(random_num, prob_interval):
 def create_children(recipe_1, recipe_2, num_ingred):
     #find first, last location for ingredient
     def first_last(recipe):
-        first = recipe.index(1)
-        last = 0
+        if 1 not in recipe:
+            first = 0
+        else:
+            first = recipe.index(1)
+        last = 1
         for i in range(0,len(recipe)):
             if recipe[i] == 1:
                 last = i
@@ -223,17 +226,18 @@ def mutations(children_recipes):
     prob_sub = 1
     
     for child in children_recipes:
-        
-        mutate = random.random()
 
-        if mutate < mutation_chance: # mutation occurs
-            t = random.random()
-            if t <= prob_add:
-                add_ingredient(child)
-            elif t > prob_add and t <= prob_remove:
-                remove_ingredient(child)
-            else:
-                substitute_ingredient(child)            
+        if sum(child) != 0: #check measure
+            mutate = random.random()
+
+            if mutate < mutation_chance: # mutation occurs
+                t = random.random()
+                if t <= prob_add:
+                    add_ingredient(child)
+                elif t > prob_add and t <= prob_remove:
+                    remove_ingredient(child)
+                else:
+                    substitute_ingredient(child)            
 
 
 #random for now, recipe is lsit aka mutable
@@ -408,6 +412,9 @@ def diversity_measure(recipes):
 
 #From paper "Maintaining Diversity in Genetic Search" by Michael L. Mauldin
 # Has to have distance from ALL recipes
+# k, current_gen, total_gen are ints
+# Returns recipes satisfying diversity requirement. The requirement is that a recipe has
+# to satisfy the hamming distance for ALL recieps
 def unique_recipes(recipes, k, current_gen, total_gen):
 
     unique = []
@@ -415,9 +422,10 @@ def unique_recipes(recipes, k, current_gen, total_gen):
     bit_decrease = linear_bit_decrease(k, total_gen, current_gen)
     not_satisfy = set()
     for i in range(0, len(recipes)):
-        if i not in not_satisfy:
-            if satisfy_uniqueness(i, i+1, recipes, bit_decrease, not_satisfy):
-                unique.append(recipes[i])
+        if sum(recipes[i]) != 0: #Safety check
+            if i not in not_satisfy:
+                if satisfy_uniqueness(i, i+1, recipes, bit_decrease, not_satisfy):
+                    unique.append(recipes[i])
 
     return unique
 
@@ -448,8 +456,36 @@ def hamming_distance(s1, s2):
     
     return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
 
+#NOTE: recipes are sorted, based on scoring from highest to lowest
+# Filters recipes based on hamming distance diversity requirement. Proceeds similar to a
+# crowding factor, by adding highest ranked recipes first, and then filtering out lower ranked
+# recipes that are similar
+def diversity_filter(recipe_rankings, recipes, k, current_gen, total_gen):
+    diverse_rankings = []
+    bit_decrease = linear_bit_decrease(k, total_gen, current_gen)
 
-      
-
-        
     
+    for ranking in recipe_rankings:
+    #Add highest ranked recipe to list first
+        if not diverse_rankings:
+            diverse_rankings.append(ranking)
+    #For all other recipes
+        else:
+            j=0
+            recipe = recipes[ ranking[3] ]
+            if satisfy_uniqueness_version_2(recipe, j, diverse_rankings, recipes, bit_decrease):
+                diverse_rankings.append(ranking)
+
+    return diverse_rankings
+                  
+#For function diversity_filter
+def satisfy_uniqueness_version_2(recipe, j, diverse_rankings, recipes, bit_decrease):
+
+    if j >= len(diverse_rankings):
+        return True
+    
+    diverse_recipe = recipes[ diverse_rankings[j][3] ]
+    if hamming_distance(recipe, diverse_recipe) > bit_decrease:
+        return satisfy_uniqueness_version_2(recipe, j+1 , diverse_rankings, recipes, bit_decrease)
+    else:
+        return False
