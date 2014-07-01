@@ -17,11 +17,11 @@ import math
 # Use initial length of 8
 # DO i just randomly choose ingredients, or choose based on some weight, probability??????
 # length_range is touple and or list, first entry is lower bound, second boundary is upper bound
-def generate_random_recipes( num_recipes, num_ingred, random_walk = False, compliment_graph=[]):
+def generate_random_recipes( num_recipes, num_ingred, random_walk = False, compliment_graph=[],  recipe_length = 8):
     recipe_list = []
 
     #intiial starting length for recipes, mean length of recipes
-    recipe_length = 8
+    #recipe_length = 8
     
     for i in range(0, num_recipes):
 
