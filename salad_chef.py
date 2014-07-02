@@ -40,7 +40,7 @@ gtbs = load_ensemble[0][0]
 
 num_recipes = 100 #Number of initial random recipes to generate
 
-num_generations = 40 #Number of generations to produce
+num_generations = 1 #Number of generations to produce
 
 num_reproduce = 300 #Number of times children are produced, (number of children = 2*num_reproduce)
 
@@ -125,34 +125,25 @@ for i in range(0, num_generations):
     gad.mutations(children_recipes)
     
         #This method only takes top 100 children to use as next generation
-    #6: Diversity check on children recipes, eliminating recipes that do not satisfy requirement
-    k= 4
-    #unique_children = gad.unique_recipes(children_recipes, k, i , num_generations)
-    #print len(unique_children)
-    
-    #feature_children_recipes = gad.build_feature_recipes(unique_children, compliment_graph,
-    #                                                 rank_k, start_ingred, end_ingred, cmv)
-
-   
-    
-    #7: Compare children to known recipes
+    #6: Compare children to known recipes
+    k = 4
     feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
                                                     rank_k, start_ingred, end_ingred, cmv)
     child_recipe_rankings, s =  gad.compare_recipe_generation( feature_known_recipes, feature_children_recipes,
                                                          known_ratings, num_ingred, gtbs)
 
-    #Use for next run, where rank/score children first, then use diversity
+    # From previous generation have: recipes, feature_recipes, recipe_rankings
+    combined_recipes = recipes + children_recipes
+    combined_feature_recipes = feature_recipes + feature_children_recipes
+    combined_recipe_rankings = gad.combine_rankings(recipe_rankings, child_recipe_rankings)
     
-    # Then, using child_recipe_rankings, use diversity filter
-    sorted_children = sorted(child_recipe_rankings, reverse = True) 
-    
-    recipe_rankings = gad.diversity_filter(sorted_children, children_recipes, k, i, num_generations)[:num_recipes]
-    print len(recipe_rankings)
+    #7: Diversity check on children and parent recipes, eliminating recipes that do not satisfy requirement
+    sorted_rankings = sorted(combined_recipe_rankings, reverse = True) 
+    recipe_rankings = gad.diversity_filter(sorted_rankings, combined_recipes, k, i, num_generations)[:num_recipes]
     #Select next generation of recipes
 
-    #recipe_rankings = sorted(child_recipe_rankings, reverse = True)[:num_recipes]
-    recipes = [ children_recipes[q] for (score, mean, med, q) in recipe_rankings]
-    feature_recipes = [ feature_children_recipes[q] for (score, mean, med, q) in recipe_rankings ]
+    recipes = [ combined_recipes[q] for (score, mean, med, q) in recipe_rankings]
+    feature_recipes = [ combined_feature_recipes[q] for (score, mean, med, q) in recipe_rankings ]
 
          #Add measurements
     x.append(i+1)
@@ -195,7 +186,7 @@ plt.subplot(1,2,1)
 plt.plot(x, max_median, label = 'max median')
 plt.plot(x, max_mean, label = 'max mean')
 plt.legend(loc='lower right')
-plt.axis([0 ,num_generations, 3, 5])
+plt.axis([0 ,num_generations, 3.5, 5])
 plt.xlabel('generation')
 plt.ylabel('percent')
 

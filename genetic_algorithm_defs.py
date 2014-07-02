@@ -489,3 +489,21 @@ def satisfy_uniqueness_version_2(recipe, j, diverse_rankings, recipes, bit_decre
         return satisfy_uniqueness_version_2(recipe, j+1 , diverse_rankings, recipes, bit_decrease)
     else:
         return False
+    
+def combine_rankings(recipe_rankings, child_recipe_rankings):
+    num_parents = len(recipe_rankings)
+    num_children = len(child_recipe_rankings)
+    combined_ranking =[]
+    q = 0
+    for score, mean, med, i in recipe_rankings:
+        combined_ranking.append( (score, mean, med, q) )
+        q+=1
+
+    for score, mean, med, i in child_recipe_rankings:
+        combined_ranking.append( (score, mean, med, q) )
+        q+=1
+
+    if q == num_parents + num_children - 1:
+        print "Succesfull COMBINATION!!!!!!!!!!!!!!!!!!!!!!!"
+
+    return combined_ranking
