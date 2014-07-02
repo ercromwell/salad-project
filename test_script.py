@@ -40,3 +40,34 @@ def combine_rankings(recipe_rankings, child_recipe_rankings):
         print "Succesfull COMBINATION!!!!!!!!!!!!!!!!!!!!!!!"
 
     return recipe_rankings  + child_recipe_rankings
+
+
+
+    #6: Diversity check on children recipes, eliminating recipes that do not satisfy requirement
+    k= 4
+    #unique_children = gad.unique_recipes(children_recipes, k, i , num_generations)
+    #print len(unique_children)
+    
+    #feature_children_recipes = gad.build_feature_recipes(unique_children, compliment_graph,
+    #                                                 rank_k, start_ingred, end_ingred, cmv)
+
+   
+    
+    #7: Compare children to known recipes
+    feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
+                                                    rank_k, start_ingred, end_ingred, cmv)
+    child_recipe_rankings, s =  gad.compare_recipe_generation( feature_known_recipes, feature_children_recipes,
+                                                         known_ratings, num_ingred, gtbs)
+
+    #Use for next run, where rank/score children first, then use diversity
+    
+    # Then, using child_recipe_rankings, use diversity filter
+    sorted_children = sorted(child_recipe_rankings, reverse = True) 
+    
+    recipe_rankings = gad.diversity_filter(sorted_children, children_recipes, k, i, num_generations)[:num_recipes]
+    print len(recipe_rankings)
+    #Select next generation of recipes
+
+    #recipe_rankings = sorted(child_recipe_rankings, reverse = True)[:num_recipes]
+    recipes = [ children_recipes[q] for (score, mean, med, q) in recipe_rankings]
+    feature_recipes = [ feature_children_recipes[q] for (score, mean, med, q) in recipe_rankings ]
