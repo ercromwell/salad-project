@@ -503,7 +503,7 @@ def combine_rankings(recipe_rankings, child_recipe_rankings):
         combined_ranking.append( (score, mean, med, q) )
         q+=1
 
-    if q == num_parents + num_children - 1:
+    if q == num_parents + num_children:
         print "Succesfull COMBINATION!!!!!!!!!!!!!!!!!!!!!!!"
-
+    
     return combined_ranking
