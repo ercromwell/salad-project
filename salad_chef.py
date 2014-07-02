@@ -178,7 +178,7 @@ for score, recipe in top_list:
     gad.print_ingredients(recipe,list_of_ingredients)
     i+=1
 
-plt.subplot(2,2,1)
+plt.figure(1)
 plt.plot(x,scores, label = 'Mean % comps won')
 plt.plot(x, score_max, label = 'Max % comps won')
 #plt.plot(x, current_gen_max, label = 'Max for current gen')
@@ -190,14 +190,16 @@ plt.xlabel('generation')
 plt.ylabel('percent')
 plt.axis([0 ,num_generations, 0, 1.5])
 
-plt.subplot(2,2,2)
+plt.figure(2)
+plt.subplot(1,2,1)
 plt.plot(x, max_median, label = 'max median')
 plt.plot(x, max_mean, label = 'max mean')
-plt.legend(loc='upper left')
+plt.legend(loc='lower right')
 plt.axis([0 ,num_generations, 3, 5])
+plt.xlabel('generation')
+plt.ylabel('percent')
 
-
-plt.subplot(2,2,3)
+plt.subplot(1,2,2)
 plt.plot(x, diverse, label = 'Diversity')
 plt.legend(loc='upper left')
 
