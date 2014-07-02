@@ -139,7 +139,8 @@ for i in range(0, num_generations):
     
     #7: Diversity check on children and parent recipes, eliminating recipes that do not satisfy requirement
     sorted_rankings = sorted(combined_recipe_rankings, reverse = True) 
-    recipe_rankings = gad.diversity_filter(sorted_rankings, combined_recipes, k, i, num_generations)[:num_recipes]
+    recipe_rankings = gad.diversity_filter(sorted_rankings, combined_recipes, k, i, num_generations, num_recipes)
+    print len(recipe_rankings)
     #Select next generation of recipes
 
     recipes = [ combined_recipes[q] for (score, mean, med, q) in recipe_rankings]
