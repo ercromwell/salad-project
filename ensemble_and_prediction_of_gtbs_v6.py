@@ -15,8 +15,9 @@ import numpy as np
 import networkx as nx
 import centrality_measures as cm
 
-script , isTree, num = argv
+script , num = argv
 
+isTree = False
 isLoaded = False
 
 num_learners = int(num)
@@ -40,11 +41,15 @@ filename = 'compliment_network_community_v11_rank_60.pi'
 load = open(filename)
 network_community = pickle.load(load)
 
-for i in range(0,len(matrix)):   
-    cv = cm.centrality_vector(graph, matrix[i][start_ingred:end_ingred], cmv)
-    network_community[i] += cv
+for i in range(0,len(matrix)):
+    if sum(matrix[i]) !=0:
+        cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
+        network_community[i] += cv
+    else:
+        print i
     
 print len(network_community[0])
+
 
 
 
@@ -65,33 +70,11 @@ X_train, X_test, y_train, y_test = train_test_split(recipe_pairs, y_vector, trai
 
 
 
-def make_one_learner(subset_size, split, t, X, y): #subset_size is number of pairs, t is for only testing purposes
-    
-    #root = int(math.sqrt(subset_size))
-    
-    # build vectors
-   # arr = np.arange(split)
-   # np.random.shuffle(arr)
-   # q = 0 #random number
-    #X=[]
-    #y=[]
-    #for q in arr: #build random set
-       # q = randint(0, split) #For reference for Erol: This is where 'split' is used
-    #    X.append(recipe_pairs[q])
-     #   y.append(y_vector[q])
+def make_one_learner(subset_size, split, t, X, y): #subset_size is number of pairs, t is for only testing pur
 
-    
-    #X , y = salad_defs.build_feature_vectors(subset, isCompress , root , 0 , len(subset), degree_centrality, bc_list)
-
-    if isTree:
-        #for trees
-        clf = tree.DecisionTreeClassifier().fit(X,y), #to be used for bagging
-    else:
-        #For gradietn boosting
-        #clf = GradientBoostingClassifier(n_estimators=100, max_depth=1, random_state=0).fit(X, y) # for boosting
-        clf = GradientBoostingClassifier(n_estimators= 600, max_depth= 3,subsample= 0.5, random_state= 0).fit(X, y) # for boosting
+    clf = GradientBoostingClassifier(n_estimators= 600, max_depth= 3,subsample= 0.5,
+                                          random_state= 0).fit(X, y)
        
-
     skew = float(sum(y))/len(y)
     print "For tree %d the skew is: %f " %(t, skew)
    
