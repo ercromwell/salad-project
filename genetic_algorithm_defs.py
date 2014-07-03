@@ -460,22 +460,24 @@ def hamming_distance(s1, s2):
 # Filters recipes based on hamming distance diversity requirement. Proceeds similar to a
 # crowding factor, by adding highest ranked recipes first, and then filtering out lower ranked
 # recipes that are similar
-def diversity_filter(recipe_rankings, recipes, k, current_gen, total_gen):
+def diversity_filter(recipe_rankings, recipes, k, current_gen, total_gen, num_recipes):
     diverse_rankings = []
     bit_decrease = linear_bit_decrease(k, total_gen, current_gen)
-
     
-    for ranking in recipe_rankings:
     #Add highest ranked recipe to list first
-        if not diverse_rankings:
-            diverse_rankings.append(ranking)
-    #For all other recipes
-        else:
-            j=0
-            recipe = recipes[ ranking[3] ]
-            if satisfy_uniqueness_version_2(recipe, j, diverse_rankings, recipes, bit_decrease):
-                diverse_rankings.append(ranking)
+    diverse_rankings.append(recipe_rankings[0])
+    q=1
 
+    while len(diverse_rankings) < num_recipes and q < len(recipe_rankings):
+        ranking = recipe_rankings[q]
+
+        j=0
+        recipe = recipes[ ranking[3] ]
+        if satisfy_uniqueness_version_2(recipe, j, diverse_rankings, recipes, bit_decrease):
+            diverse_rankings.append(ranking)
+
+        q+=1
+        
     return diverse_rankings
                   
 #For function diversity_filter
@@ -503,7 +505,9 @@ def combine_rankings(recipe_rankings, child_recipe_rankings):
         combined_ranking.append( (score, mean, med, q) )
         q+=1
 
-    if q == num_parents + num_children:
+    if q == num_parents + num_children - 1:
         print "Succesfull COMBINATION!!!!!!!!!!!!!!!!!!!!!!!"
+
+    print q
     
     return combined_ranking
