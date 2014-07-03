@@ -1,7 +1,7 @@
 # salad_chef.py
 # Main script that runs genetic algorithm to create new salad recipe
 # By: Erol Cromwell, 2014, DRI project
-
+ # for commitng purpsoes
 #0: Import , load any modules/files we need, such as the predictor, graphs and whatnot
 import pickle
 import random

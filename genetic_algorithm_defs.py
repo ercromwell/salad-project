@@ -2,7 +2,7 @@
 #def generate_random_recipes : Create initial recipe population. Can be completely random or based on random walk
 #def random_graph_walk : Random walk on compliment graph to create intitial recipe population
 #def rank_recipes : 
-
+# for commintg puproses
 import random
 import networkx
 from collections import defaultdict
