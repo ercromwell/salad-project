@@ -41,7 +41,7 @@ load = open(filename)
 network_community = pickle.load(load)
 
 for i in range(0,len(matrix)):   
-    cv = cm.centrality_vector(graph, matrix[i][start_ingred:end_ingred], cmv)
+    cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
     network_community[i] += cv
     
 print len(network_community[0])
