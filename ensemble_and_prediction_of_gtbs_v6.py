@@ -138,7 +138,7 @@ salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
 
     
 #pickle it!
-#name = 'gtbs_100_estimators_3_depth_over_cos_threshold_v3.pi'
+#name = 'gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
 #file_pi = open(name, 'w') 
-#pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
+p#ickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
     
