@@ -41,12 +41,18 @@ filename = 'compliment_network_community_v11_rank_60.pi'
 load = open(filename)
 network_community = pickle.load(load)
 
+<<<<<<< HEAD
 for i in range(0,len(matrix)):
     if sum(matrix[i]) !=0:
         cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
         network_community[i] += cv
     else:
         print i
+=======
+for i in range(0,len(matrix)):   
+    cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
+    network_community[i] += cv
+>>>>>>> FETCH_HEAD
     
 print len(network_community[0])
 
@@ -121,7 +127,7 @@ salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
 
     
 #pickle it!
-#name = 'gtbs_100_estimators_3_depth_over_cos_threshold_v3.pi'
+#name = 'gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
 #file_pi = open(name, 'w') 
-#pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
+p#ickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
     
