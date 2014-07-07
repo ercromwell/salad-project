@@ -64,7 +64,7 @@ for length in recipe_lengths:
     feature_recipes =  gad.build_feature_recipes(recipes, compliment_graph, rank_k,
                                          start_ingred, end_ingred, cmv)
 
-    recipe_rankings, scores = gad.compare_recipe_generation( feature_known_recipes, feature_recipes,
+    recipe_rankings, scores = compare_recipes( feature_known_recipes, feature_recipes,
                                                          known_ratings, num_ingred, gtbs)
 
     max_mean = max( [ mean for (score, mean, med, q) in recipe_rankings] )
@@ -78,3 +78,63 @@ for length in recipe_lengths:
     print '    Max mean rating: %f' %max_mean
     print '    Max median rating: %f' %max_median
 
+
+
+def compare_recipes( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs):
+    score_current = 0 # Average % competitions won against known recipes
+    m = [] # keeping track of median % competitions won
+    network_pairs = False
+    compressed = True
+    feature_compressed = False
+
+    score_max = 0    #Max % score against known recipes
+    recipe_rankings = [] # rankings for each current recipes
+
+    num_known_recipes = len(feature_known_recipes)
+    defeats = [0]*num_known_recipes
+    always_defeated_recipes = set()
+    i = 0
+
+    #Average/ mean score of current generation
+    for current in feature_current_recipes:
+        c = 0
+        defeated_recipes = set()
+        ratings = []
+        for j in range(0,num_known_recipes):
+
+            pair = salad_defs.make_recipe_pair(current, feature_known_recipes[j], num_ingred,
+                                               network_pairs, compressed, feature_compressed)
+            score = gtbs.predict(pair)
+            score_current += score
+            c += score
+
+            if score == 1:
+                ratings.append(known_ratings[j])
+            else:
+                defeats[j] +=1
+                defeated_recipes.add(j)
+
+
+        if i==0:
+            always_defeated_recipes = always_defeated_recipes | defeated_recipes
+        else:
+            always_defeated_recipes = always_defeated_recipes & defeated_recipes
+        # For each current recipe:
+#        median_rating = np.median(ratings)
+#        mean_rating = np.mean(ratings)
+#        percent_score = float(c) / num_known_recipes
+#        recipe_rankings.append( (percent_score, mean_rating, median_rating, i) ) #i is for recipe tracking
+        
+#        m.append(float(c))
+        
+#        if c > score_max:
+#            score_max = c
+#            init_gen_loc = i
+        i+=1
+            
+#    num_comp = num_known_recipes * len(feature_current_recipes)
+#    percent_score = float(score_current)/num_comp
+#    median_score = np.median(m) / num_known_recipes #median of percent competitions won
+#    p_score_max = float(score_max)/ num_known_recipes
+# recipe_rankings , (percent_score, p_score_max, median_score), 
+    return defeats, always_defeated_recipes

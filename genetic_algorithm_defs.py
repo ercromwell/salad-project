@@ -183,15 +183,21 @@ def create_children(recipe_1, recipe_2, num_ingred):
     child_2 = recipe_2[:split] + recipe_1[split:]
 
     return child_1, child_2
-
-def build_feature_recipes(recipes, compliment_graph, rank_k, start_ingred, end_ingred, cmv):
+#netowrk is if just using network community and network centrality
+def build_feature_recipes(recipes, compliment_graph, rank_k, start_ingred, end_ingred, cmv, network = False):
 
     network_community = inet.create_network_community(compliment_graph, recipes, rank_k = rank_k)
 
     feature_recipes = []
-    for i in range(0,len(recipes)):   
-        cv = cm.centrality_vector(recipes[i][start_ingred:end_ingred], cmv)
-        feature_recipes.append(recipes[i] + cv + network_community[i])
+    if network:
+        for i in range(0,len(recipes)):   
+            cv = cm.centrality_vector(recipes[i][start_ingred:end_ingred], cmv)
+            feature_recipes.append(network_community[i] + cv)
+
+    else:
+        for i in range(0,len(recipes)):   
+            cv = cm.centrality_vector(recipes[i][start_ingred:end_ingred], cmv)
+            feature_recipes.append(recipes[i] + cv + network_community[i])
 
     return feature_recipes
 
@@ -283,12 +289,10 @@ def substitute_ingredient(recipe):
 
 # Used to compare current generation of recipes to known recipes
 # feature_known_recipse contains full features, known_ratings has ratings, correspond to recipe in feature_known_recipes
-def compare_recipe_generation( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs):
+def compare_recipe_generation( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs,
+                                   network_pairs = False, compressed = True, feature_compressed = False ):
     score_current = 0 # Avereage % competitions won against known recipes
     m = [] # keeping track of median % competitions won
-    network_pairs = False
-    compressed = True
-    feature_compressed = False
 
     score_max = 0    #Max % score against known recipes
     recipe_rankings = [] # rankings for each current recipes

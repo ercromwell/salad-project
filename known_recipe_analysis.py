@@ -12,11 +12,9 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 
-def compare_recipes( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs):
+def compare_recipes( feature_known_recipes, feature_current_recipes, known_ratings, num_ingred, gtbs,
+                     network_pairs = False, compressed = True, feature_compressed = False):
     score_current = 0 # Average % competitions won against known recipes
-    network_pairs = False
-    compressed = True
-    feature_compressed = False
 
     num_known_recipes = len(feature_known_recipes)
     wins = [0]*num_known_recipes
@@ -60,7 +58,7 @@ load = open(filename)
 network_community = pickle.load(load)
 
     #gradient boosting learner
-file_name = 'gtbs_v11_600_estimators_3_depth_rank_60.pi'
+file_name = 'gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
 load = open(file_name)
 load_ensemble = pickle.load(load)
 load.close()
@@ -81,26 +79,28 @@ known_ratings = []
 for i in range(0,len(known_matrix)):
     if sum(known_matrix[i][3:]) > 0:
         cv = cm.centrality_vector( known_matrix[i][3:], cmv)
-        feature_known_recipes.append(known_matrix[i][3:] + cv + network_community[i])
+        feature_known_recipes.append(network_community[i] + cv)
         known_ratings.append(known_matrix[i][0])
 
 length = 9
-num_recipes = 500 #Number of initial random recipes to generate
+num_recipes = 5000 #Number of initial random recipes to generate
 
 cutoff = num_recipes *0.1
 losing_recipes = set()
 winning_recipes = set()
-num_runs = 10
+num_runs = 1
+wins = []
 
 for i in range(0,num_runs):
     print i
     recipes = gad.generate_random_recipes(num_recipes, num_ingred, recipe_length = length)
     
     feature_recipes =  gad.build_feature_recipes(recipes, compliment_graph, rank_k,
-                                         start_ingred, end_ingred, cmv)
+                                         start_ingred, end_ingred, cmv, network = True)
 
     wins, defeated_recipes, successful_recipes = compare_recipes( feature_known_recipes,feature_recipes,
-                                                                  known_ratings,num_ingred, gtbs)
+                                                                  known_ratings,num_ingred, gtbs,
+                                                                  network_pairs = True, compressed = False)
 
     if i ==0:
         losing_recipes = losing_recipes | defeated_recipes
@@ -119,23 +119,25 @@ for r in winning_recipes:
     
 print 'On average, # recipes winning 90 percent: %d'%len(winning_recipes)
 print winning_recipes
+print 'ratings'
 print winning_rating
 
 print '\nOn average, # recipes losing 90 percent: %d'%len(losing_recipes)
 print losing_recipes
+print 'ratings:'
 print losing_rating
-#x = range(0, len(known_ratings))
+x = range(0, len(known_ratings))
 #l = len(known_ratings)
 #d = 200
 #width =0.5
 #plt.figure(1)
 #plt.bar(x[:d], defeats[:d],width, color = 'y')
 #plt.bar(x[:d], wins[:d], width,color = 'b', bottom = defeats[:d])
-#plt.scatter(x, wins, s=15)
-#plt.xlabel('recipe')
-#plt.ylabel('# of wins')
+plt.scatter(x, wins, s=15)
+plt.xlabel('recipe')
+plt.ylabel('# of wins')
 
-#plt.show()
+plt.show()
     
     
 
