@@ -38,11 +38,11 @@ keys = ingredient_flavor_pair_dict.keys()
 for i in range( 0, len(ingredients_in_flavor)-1 ):
 
     for j in range( i, len(ingredients_in_flavor) ):
-        t = ( ingredients_in_flavor[i], ingredients_in_flavor[j] )
-        if t in keys:
-            pairs.append(t)
+        t1 = ( ingredients_in_flavor[i], ingredients_in_flavor[j] )
+        t2 = ( t1[1], t1[0] )
+        if t1 in keys or t2 in keys:
+            pairs.append(t1)
 
-            
         
 print len(not_in_flavor)
 print len(ingredients_in_flavor)

@@ -50,16 +50,18 @@ def get_pairs_cosine_threshold(matrix = [], network_community = [], network_pair
                         print len(recipe_pair)
                         l=3
                     if cosine_measure <= 0.2: #For getting pairs less than 0.2 similarity
-                        cos_sim_pairs_under.append(recipe_pair)
                         if matrix[i][0] > matrix[j][0]:
                             y_vector_under.append(1)
-                        else:
+                            cos_sim_pairs_under.append(recipe_pair)
+                        elif matrix[i][0] < matrix[j][0]:
                             y_vector_under.append(0)
+                            cos_sim_pairs_under.append(recipe_pair)
                     else: #For getting paurs above 0.2 similarity
-                        cos_sim_pairs_over.append(recipe_pair)
                         if matrix[i][0] > matrix[j][0]:
+                            cos_sim_pairs_over.append(recipe_pair)
                             y_vector_over.append(1)
-                        else:
+                        elif matrix[i][0] < matrix[j][0]:
+                            cos_sim_pairs_over.append(recipe_pair)
                             y_vector_over.append(0)
                         
     return cos_sim_pairs_over, y_vector_over, cos_sim_pairs_under, y_vector_under
