@@ -123,15 +123,18 @@ def create_parent_probabilty_interval(recipe_score):
 
     return parent_prob
 
-#Print ingredients in recipe
-def print_ingredients(recipe_vec, list_of_ingredients):
+def get_ingredient_list(recipe_vec, list_of_ingredients):
     list = []
 
     for i in range(0,len(recipe_vec)):
         if recipe_vec[i] == 1:
             list.append(list_of_ingredients[i])
 
-    print list
+    return list
+
+#Print ingredients in recipe
+def print_ingredients(recipe_vec, list_of_ingredients):
+    print get_ingredient_list(recipe_vec, list_of_ingredients)
 
 #Find where walk lies in probability intervals, choosing parent
 def find_interval(random_num, prob_interval):
