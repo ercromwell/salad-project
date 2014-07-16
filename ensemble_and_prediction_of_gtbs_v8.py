@@ -1,7 +1,7 @@
 # Based on code by: Jonah Galeota-Sprung, 2012
 # Edited by: Erol Cromwell, 2014
-# This version used for network communities, second attempt
-# Created: July 3rd, 2014
+# This version used for flavor network communities
+# Created: July 14th, 2014
 
 from sklearn.ensemble import GradientBoostingClassifier
 import pickle
@@ -28,7 +28,7 @@ num_ingred = len(matrix[0])-3
 start_ingred = 3
 end_ingred = num_ingred + start_ingred
 
-filename = 'compliment_graph_weighted_v11.pi'
+filename = 'flavor_compound_network.pi'
 load = open(filename)
 graph = pickle.load(load)
 load.close()
@@ -36,7 +36,7 @@ load.close()
 cmv = cm.centrality_measure_vec(graph)
 
 
-filename = 'compliment_network_community_v11_rank_60.pi'
+filename = 'flavor_network_community_100.pi'
 load = open(filename)
 network_community = pickle.load(load)
 

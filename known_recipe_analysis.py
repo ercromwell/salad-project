@@ -1,5 +1,4 @@
 # Used to test if bias in learner towards recipes with more ingredients
-
 import pickle
 import random
 import networkx as nx
@@ -63,18 +62,34 @@ load = open('feature_vector_matrix_over_5_reviews_cleaned_v11.pi')
 known_matrix = pickle.load(load)
 load.close()
 
+load = open('feature_bad_recipes_all.pi')
+bad_recipe_matrix = pickle.load(load)
+load.close()
+
+known_matrix+= bad_recipe_matrix
+
+
     #compliment graph
 file_name = 'compliment_graph_weighted_v11.pi'
 load = open(file_name)
 compliment_graph = pickle.load(load)
 load.close()
+
     # known network communities
-filename = 'compliment_network_community_v11_rank_60.pi'
-load = open(filename)
+load = open('compliment_network_community_v11_rank_60.pi')
 network_community = pickle.load(load)
+load.close()
+
+load = open('bad_recipe_all_network_community.pi')
+bad_nc = pickle.load(load)
+load.close()
+
+network_community += bad_nc
 
     #gradient boosting learner
-file_name = 'gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
+#file_name = 'gtbs_v12_828_iterations_depth_3_rank_60_network_community_w_bad.pi'
+#file_name ='gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
+file_name = 'gtbs_v13_600_iterations_depth_3_rank_60_network_community_w_bad.pi'
 load = open(file_name)
 load_ensemble = pickle.load(load)
 load.close()
@@ -98,8 +113,8 @@ for i in range(0,len(known_matrix)):
         feature_known_recipes.append(network_community[i] + cv)
         known_ratings.append(known_matrix[i][0])
 
-length = 9
-NUM_RECIPES = 1 #Number of initial random recipes to generate
+length = 8
+NUM_RECIPES = 1000 #Number of initial random recipes to generate
 
 cutoff = NUM_RECIPES *0.1
 losing_recipes = set()
@@ -109,7 +124,7 @@ wins = []
 
 new_measure = []
 comps_won = []
-
+recipes = []
 for i in range(0,num_runs):
     print i
     recipes = gad.generate_random_recipes(NUM_RECIPES, num_ingred, recipe_length = length)
@@ -139,42 +154,40 @@ for r in losing_recipes:
 for r in winning_recipes:
     winning_rating.append( known_ratings[r] )
     
-print 'On average, # recipes winning 90 percent: %d'%len(winning_recipes)
+print 'On average, # known recipes winning 90 percent: %d'%len(winning_recipes)
 print winning_recipes
 print 'ratings'
 print winning_rating
 
-print '\nOn average, # recipes losing 90 percent: %d'%len(losing_recipes)
+print '\nOn average, # known recipes losing 90 percent: %d'%len(losing_recipes)
 print losing_recipes
 print 'ratings:'
 print losing_rating
 
-print float(sum(known_ratings)) / (5 * len(known_ratings) ) 
+print 'max score: %f'%(float(sum(known_ratings)) / (5 * len(known_ratings) ) )
 
+## x = range(0, len(known_ratings))
+## print 'random recipes with 90% wins:'
+## for recipe, wins in zip(recipes,comps_won):
+##     if wins >=0.9:
+##         print 'score: %f'%wins
+##         gad.print_ingredients(recipe, list_of_ingredients)
 
-x = range(0, len(known_ratings))
-
-plt.figure(1)
-plt.scatter(comps_won, new_measure)
-plt.xlabel('% comps won')
-plt.ylabel('new_measure')
-plt.axis([0, 1, -1, 1 ])
-
-plt.figure(2)
-x = range(0, NUM_RECIPES)
-plt.scatter(x, new_measure)
-plt.xlabel('random_recipe')
-plt.ylabel('new_measure')
-
-
-plt.show()
-    
+for score, recipe, comp in sorted( zip(new_measure, recipes, comps_won), reverse = True)[:10]:
+    print 'score: %f. comps won: %f'%(score,comp)
+    gad.print_ingredients(recipe, list_of_ingredients)
     
 
-    
+## plt.figure(1)
+## plt.scatter(comps_won, new_measure)
+## plt.xlabel('% comps won')
+## plt.ylabel('new_measure')
+## plt.axis([0, 1, -1, 1 ])
 
-    
+## plt.figure(2)
+## x = range(0, NUM_RECIPES)
+## plt.scatter(x, new_measure)
+## plt.xlabel('random_recipe')
+## plt.ylabel('new_measure')
 
-
-
-
+## plt.show()

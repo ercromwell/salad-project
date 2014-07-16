@@ -89,14 +89,6 @@ def create_network_community(graph, matrix, rank_k = 0):
 
     return network_community
 
-    
-    
-    
-
-
-
-
-
 # Returns co_occurence network in form of an adjacency list, stored as a dictionary,
 # where key is vertex, values are set of neighboring vertices
 def create_ingredient_co_occurrence_network(filename, new_file):
