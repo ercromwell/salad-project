@@ -21,14 +21,15 @@ script , isTree, num = argv
 isLoaded = False
 num_learners = int(num)
 
-load = open('feature_bad_recipes.pi')
+load = open('feature_bad_recipes_all.pi')
 bad_recipe_matrix = pickle.load(load)
 load.close()
-print bad_recipe_matrix[1]
 
 load = open('feature_vector_matrix_over_5_reviews_cleaned_v11.pi')
 matrix = pickle.load(load)
 load.close()
+
+matrix+= bad_recipe_matrix
 
 num_ingred = len(matrix[0])-3
 start_ingred = 3
@@ -41,9 +42,8 @@ load.close()
 
 cmv = cm.centrality_measure_vec(graph)
 
-matrix+= bad_recipe_matrix
 
-load = open('bad_recipe_network_community.pi')
+load = open('bad_recipe_all_network_community.pi')
 bad_nc = pickle.load(load)
 load.close()
 
@@ -58,11 +58,11 @@ for i in range(0,len(matrix)):
     network_community[i] += cv
     
 print len(network_community[0])
-
+print len(network_community)
 
 
 print "Constructing pairs..."
-recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold(matrix = matrix,
+recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold_version_2(matrix = matrix,
                                                                                  network_community = network_community,
                                                                                  network_pairs = True,
                                                                                  compressed = False)
@@ -73,7 +73,7 @@ split = 4*int(float(len(recipe_pairs))/5.0)
 test_split = int(float(len(recipe_pairs))/5.0)
 print split
 
-'''
+
 X_train, X_test, y_train, y_test = train_test_split(recipe_pairs, y_vector, train_size=0.6,random_state=0)
 
 
@@ -141,7 +141,11 @@ salad_defs.show_things(ensemble, Xtest2 , ytest2, isTree, isLoaded)
 
 
 print "From under 0.2"
-salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
+both_bad, both_allrep, bad_and_allrep = salad_defs.analysis_pairs(ensemble, X_under , y_under)
+
+print "For pairs both with bad recipes, amount: %d , accuracy: %f"%both_bad
+print "For pairs both with allrecipes, amount: %d , accuracy: %f"%both_allrep
+print "For pairs bad and allrecipes, amount: %d , accuracy: %f"%bad_and_allrep
 
 
 #s = learner[0].score(Xtest,ytest) 
@@ -149,10 +153,9 @@ salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
 #percent = salad_defs.predict_bagged_score(ensemble, Xtest , ytest ,isTree)
 #print "Accuracy of learner is : %f" %percent
 
+## #pickle it!
+## name = 'gtbs_v13_600_iterations_depth_3_rank_60_network_community_w_bad.pi'
+## file_pi = open(name, 'w') 
+## pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
     
-#pickle it!
-#name = 'gtbs_v11_600_iterations_depth_3_rank_60_network_community.pi'
-#file_pi = open(name, 'w') 
-#pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
-    
-'''
+

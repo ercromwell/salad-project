@@ -66,7 +66,7 @@ print len(known_ratings), len(feature_known_recipes)
 
 #1: Generate random recipes
     #initial recipes set up like ingredient vectors
-recipes = gad.generate_random_recipes(NUM_RECIPES, NUM_INGRED, random_walk = True,compliment_graph = compliment_graph)
+recipes = gad.generate_random_recipes(NUM_RECIPES, NUM_INGRED)
     
 
     #1a: Create feature initial recipes
