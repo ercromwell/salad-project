@@ -28,7 +28,7 @@ num_ingred = len(matrix[0])-3
 start_ingred = 3
 end_ingred = num_ingred + start_ingred
 
-filename = 'flavor_compound_network.pi'
+filename = 'flavor_compound_network_v2_mean.pi'
 load = open(filename)
 graph = pickle.load(load)
 load.close()
@@ -36,7 +36,7 @@ load.close()
 cmv = cm.centrality_measure_vec(graph)
 
 
-filename = 'flavor_network_community_100.pi'
+filename = 'flavor_network_community_v2_median_rank_50.pi'
 load = open(filename)
 network_community = pickle.load(load)
 

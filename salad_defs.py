@@ -45,8 +45,9 @@ def get_pairs_cosine_threshold(matrix = [], network_community = [], network_pair
                     
                     #making recipe pair, determined whether using matrix or network community
                     if network_pairs:
-                        recipe_pair = make_recipe_pair(network_community[i], network_community[j], len(network_community[j])-4
-                                                       , network_pairs, compressed, feature_compressed)
+                        recipe_pair = make_recipe_pair(network_community[i], network_community[j],
+                                                       len(network_community[j])-4, network_pairs,
+                                                        compressed, feature_compressed)
                     else:
                         recipe_pair = make_recipe_pair(matrix[i][3:], matrix[j][3:], num_ingredients, network_pairs,
                                                        compressed, feature_compressed,)
@@ -106,8 +107,9 @@ def get_pairs_cosine_threshold_version_2(matrix = [], network_community = [], ne
                     
                     #making recipe pair, determined whether using matrix or network community
                     if network_pairs:
-                        recipe_pair = make_recipe_pair(network_community[i], network_community[j], len(network_community[j])-4
-                                                       , network_pairs, compressed, feature_compressed)
+                        recipe_pair = make_recipe_pair(network_community[i], network_community[j],
+                                                       len(network_community[j])-4, network_pairs,
+                                                       compressed, feature_compressed)
                     else:
                         recipe_pair = make_recipe_pair(matrix[i][3:], matrix[j][3:], num_ingredients, network_pairs,
                                                        compressed, feature_compressed,)
@@ -158,7 +160,8 @@ def make_recipe_pair(recipe1, recipe2, num_ingred, network_pairs, compressed, fe
         else:
             recipe_pair = compress(recipe1[:num_ingred], recipe2[:num_ingred], num_ingred, network_pairs) + recipe1[num_ingred:] + recipe2[num_ingred:]
     else:
-        recipe_pair = recipe1[:num_ingred] + recipe2[:num_ingred] + recipe1[num_ingred:] + recipe2[num_ingred:]
+        recipe_pair = recipe1 + recipe2
+        #recipe1[:num_ingred] + recipe2[:num_ingred] + recipe1[num_ingred:] + recipe2[num_ingred:]
     
     return recipe_pair
         
@@ -255,13 +258,18 @@ def analysis_pairs(ensemble, Xtest, ytest):
                 amount_bad_and_allrecipe +=1
 
             score = gtbs[0].predict(pairs[2:])
+            
             if score == result:
+                general_accuracy+=1
+                
                 if both_bad:
                     accuracy_both_bad+=1
                 elif both_allrecipe:
                     accuracy_both_allrecipes +=1
                 else:
                     accuracy_bad_and_allrecipe+=1
+    general_accuracy = float(general_accuracy)/ len(Xtest)
+    print "Overal accuracy is: %f"%general_accuracy
 
     accuracy_both_bad = float(accuracy_both_bad)/amount_both_bad
     accuracy_both_allrecipes = float(accuracy_both_allrecipes) / amount_both_allrecipes
