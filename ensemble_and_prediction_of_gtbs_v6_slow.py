@@ -1,6 +1,7 @@
 # Based on code by: Jonah Galeota-Sprung, 2012
 # Edited by: Erol Cromwell, 2014
-# This version used for ingredient vectors, centrality, and network communities
+# This version used for network communities, second attempt
+# Created: July 3rd, 2014
 
 from sklearn.ensemble import GradientBoostingClassifier
 import pickle
@@ -14,8 +15,9 @@ import numpy as np
 import networkx as nx
 import centrality_measures as cm
 
-script, isTree, num = argv
+script , num = argv
 
+isTree = False
 isLoaded = False
 
 num_learners = int(num)
@@ -39,19 +41,23 @@ filename = 'compliment_network_community_v11_rank_60.pi'
 load = open(filename)
 network_community = pickle.load(load)
 
-new_matrix = []
-for i in range(0,len(matrix)):   
-    cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
-    new_matrix.append(matrix[i] + cv + network_community[i])
+for i in range(0,len(matrix)):
+    if sum(matrix[i]) !=0:
+        cv = cm.centrality_vector( matrix[i][start_ingred:end_ingred], cmv)
+        network_community[i] += cv
+    else:
+        print i
     
-print len(new_matrix[0])
+print len(network_community[0])
+
 
 
 
 print "Constructing pairs..."
-recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold(matrix = new_matrix,
-                                                                                 num_ingredients = num_ingred,
-                                                                                 ingredient_end = end_ingred)
+recipe_pairs, y_vector, X_under, y_under = salad_defs.get_pairs_cosine_threshold(matrix = matrix,
+                                                                                 network_community = network_community,
+                                                                                 network_pairs = True,
+                                                                                 compressed = False)
 
 print len(y_vector)
 print len(recipe_pairs[0])
@@ -64,33 +70,11 @@ X_train, X_test, y_train, y_test = train_test_split(recipe_pairs, y_vector, trai
 
 
 
-def make_one_learner(subset_size, split, t, X, y): #subset_size is number of pairs, t is for only testing purposes
-    
-    #root = int(math.sqrt(subset_size))
-    
-    # build vectors
-   # arr = np.arange(split)
-   # np.random.shuffle(arr)
-   # q = 0 #random number
-    #X=[]
-    #y=[]
-    #for q in arr: #build random set
-       # q = randint(0, split) #For reference for Erol: This is where 'split' is used
-    #    X.append(recipe_pairs[q])
-     #   y.append(y_vector[q])
+def make_one_learner(subset_size, split, t, X, y): #subset_size is number of pairs, t is for only testing pur
 
-    
-    #X , y = salad_defs.build_feature_vectors(subset, isCompress , root , 0 , len(subset), degree_centrality, bc_list)
-
-    if isTree:
-        #for trees
-        clf = tree.DecisionTreeClassifier().fit(X,y), #to be used for bagging
-    else:
-        #For gradietn boosting
-        #clf = GradientBoostingClassifier(n_estimators=100, max_depth=1, random_state=0).fit(X, y) # for boosting
-        clf = GradientBoostingClassifier(n_estimators= 1050, max_depth= 3,subsample= 0.5, random_state= 0).fit(X, y) # for boosting
+    clf = GradientBoostingClassifier(n_estimators= 600, max_depth= 3,subsample= 0.5,
+                                          random_state= 0).fit(X, y)
        
-
     skew = float(sum(y))/len(y)
     print "For tree %d the skew is: %f " %(t, skew)
    
@@ -137,7 +121,7 @@ salad_defs.show_things(ensemble, X_under , y_under, isTree, isLoaded)
 
     
 #pickle it!
-name = 'gtbs_v11_1050_iterations_depth_3_rank_60.pi'
-file_pi = open(name, 'w') 
-pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
+#name = 'gtbs_100_estimators_3_depth_over_cos_threshold_v3.pi'
+#file_pi = open(name, 'w') 
+#pickle.dump(ensemble, file_pi) #that was such a stupid mistake!!!!!
     
