@@ -136,7 +136,7 @@ for i in range(0, NUM_GENERATIONS):
         
     gad.mutations(children_recipes)
     
-        #This method only takes top 100 children to use as next generation
+        #This method only takes top 100 parent and children to use as next generation
     #6: Compare children to known recipes
     k = 6
     feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,

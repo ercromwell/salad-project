@@ -187,9 +187,9 @@ def create_children(recipe_1, recipe_2, num_ingred):
 
     return child_1, child_2
 #netowrk is if just using network community and network centrality
-def build_feature_recipes(recipes, compliment_graph, rank_k, start_ingred, end_ingred, cmv, network = False):
+def build_feature_recipes(recipes, graph, rank_k, start_ingred, end_ingred, cmv, network = False):
 
-    network_community = inet.create_network_community(compliment_graph, recipes, rank_k = rank_k)
+    network_community = inet.create_network_community(graph, recipes, rank_k = rank_k)
 
     feature_recipes = []
     if network:

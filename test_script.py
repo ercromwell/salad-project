@@ -1,73 +1,32 @@
-
-
-    k= 4
-
-    #6: Compare children to known recipes
-    feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
-                                                    rank_k, start_ingred, end_ingred, cmv)
-    child_recipe_rankings, s =  gad.compare_recipe_generation( feature_known_recipes, feature_children_recipes,
-                                                         known_ratings, num_ingred, gtbs)
-
-    # From previous generation have: recipes, feature_recipes, recipe_rankings
-    combined_recipes = recipes + children_recipes
-    combined_feature_recipes = feature_recipes + feature_children_recipes
-    combined_recipe_rankings = gad.combine_rankings(recipe_rankings, child_recipe_rankings)
-    
-    #7: Diversity check on children recipes, eliminating recipes that do not satisfy requirement
-    sorted_rankings = sorted(combined_recipe_rankings, reverse = True) 
-
-
-    recipe_rankings = gad.diversity_filter(sorted_rankings, combined_recipes, k, i, num_generations)[:num_recipes]
-    #Select next generation of recipes
-
-    recipes = [ combined_recipes[q] for (score, mean, med, q) in recipe_rankings]
-    feature_recipes = [ combined_feature_recipes[q] for (score, mean, med, q) in recipe_rankings ]
-
-def combine_rankings(recipe_rankings, child_recipe_rankings):
-    num_parents = len(recipe_rankings)
-    num_children = len(child_recipe_rankings)
-
-    q = 0
-    for ranking in recipe_rankings:
-        ranking[3] = q
-        q+=1
-
-    for child_ranking in child_recipe_rankings:
-        child_ranking[3] = q
-        q+=1
-
-    if q == num_parents + num_children - 1:
-        print "Succesfull COMBINATION!!!!!!!!!!!!!!!!!!!!!!!"
-
-    return recipe_rankings  + child_recipe_rankings
+import pickle
+import random
+import centrality_measures as cm
+import genetic_algorithm_defs as gad
+import csv
+import networkx as nx
+import ingredient_networks as inet
 
 
 
-    #6: Diversity check on children recipes, eliminating recipes that do not satisfy requirement
-    k= 4
-    #unique_children = gad.unique_recipes(children_recipes, k, i , num_generations)
-    #print len(unique_children)
-    
-    #feature_children_recipes = gad.build_feature_recipes(unique_children, compliment_graph,
-    #                                                 rank_k, start_ingred, end_ingred, cmv)
+filename = 'flavor_compound_network_v2_mean.pi'
+load = open(filename)
+flavor_graph = pickle.load(load)
+load.close()
 
-   
-    
-    #7: Compare children to known recipes
-    feature_children_recipes = gad.build_feature_recipes(children_recipes, compliment_graph,
-                                                    rank_k, start_ingred, end_ingred, cmv)
-    child_recipe_rankings, s =  gad.compare_recipe_generation( feature_known_recipes, feature_children_recipes,
-                                                         known_ratings, num_ingred, gtbs)
+file_name = 'feature_bad_recipes_all.pi'
+load = open(file_name)
+feature_matrix = pickle.load(load)
+load.close()
 
-    #Use for next run, where rank/score children first, then use diversity
-    
-    # Then, using child_recipe_rankings, use diversity filter
-    sorted_children = sorted(child_recipe_rankings, reverse = True) 
-    
-    recipe_rankings = gad.diversity_filter(sorted_children, children_recipes, k, i, num_generations)[:num_recipes]
-    print len(recipe_rankings)
-    #Select next generation of recipes
+matrix = []
+for recipe in feature_matrix:
+    matrix.append(recipe[3:])
 
-    #recipe_rankings = sorted(child_recipe_rankings, reverse = True)[:num_recipes]
-    recipes = [ children_recipes[q] for (score, mean, med, q) in recipe_rankings]
-    feature_recipes = [ feature_children_recipes[q] for (score, mean, med, q) in recipe_rankings ]
+print len(matrix[0])
+
+flavor_nc = inet.create_network_community(flavor_graph, matrix, rank_k = 80)
+
+out_file = 'bad_recipe_all_flavor_network_community_mean_80.pi'
+file_pi = open(out_file, 'w')
+pickle.dump(flavor_nc, file_pi)
+file_pi.close()
